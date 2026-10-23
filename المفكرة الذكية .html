@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- إعدادات إخفاء شريط المتصفح ووضع ملء الشاشة (PWA / Standalone) -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22%D8%A7%D9%84%D9%85%D9%81%D9%83%D8%B1%D8%A9%20%D8%A7%D9%84%D8%B0%D9%83%D9%8A%D8%A9%22%2C%22short_name%22%3A%22%D8%A7%D9%84%D9%85%D9%81%D9%83%D8%B1%D8%A9%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f8fafc%22%2C%22theme_color%22%3A%22%234f46e5%22%7D">
+
+    <!-- Dynamic Title handled by JS -->
+    <title id="pageTitle">المفكرة الذكية الشاملة</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Header / Navbar (كليشة التطبيق الديناميكية) -->
+    <header class="bg-gradient-to-r from-indigo-600 to-violet-700 text-white shadow-md sticky top-0 z-30">
+        <div class="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-2 space-x-reverse overflow-hidden">
+                <div id="headerIconContainer" class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20 shrink-0">
+                    <i id="headerIcon" class="fa-solid fa-crown text-xl text-yellow-300"></i>
+                </div>
+                <div class="truncate">
+                    <h1 id="headerTitle" class="font-bold text-lg leading-tight truncate">المفكرة الذكية</h1>
+                    <p id="headerSubtitle" class="text-xs text-indigo-200 truncate">إدارة النوافذ والأقسام بكل سلاسة</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <!-- زر لوحة التحكم (لتغيير الكليشة والشعار) -->
+                <button onclick="openSettingsModal()" title="لوحة التحكم والكليشة" class="w-9 h-9 bg-white/15 hover:bg-white/25 text-white rounded-xl backdrop-blur-sm transition border border-white/30 flex items-center justify-center shadow-sm active:scale-95">
+                    <i class="fa-solid fa-gear text-sm"></i>
+                </button>
+                <button onclick="openAddWindowModal()" class="bg-white/20 hover:bg-white/30 text-white font-medium text-xs px-3 py-2 rounded-xl backdrop-blur-sm transition border border-white/30 flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i class="fa-solid fa-plus text-yellow-300"></i>
+                    <span class="hidden sm:inline">نافذة جديدة</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Windows / Tabs Navigation Bar -->
+        <div class="bg-indigo-900/40 border-t border-white/10 px-4 py-2">
+            <div id="windowsTabsContainer" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+                <!-- Tabs injected dynamically -->
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-md w-full mx-auto p-4 pb-24">
+        <!-- Window Operations Bar -->
+        <div id="currentWindowHeader" class="mb-4 flex items-center justify-between bg-white p-3.5 rounded-2xl shadow-sm border border-slate-100">
+            <!-- Injected dynamic window info & actions -->
+        </div>
+
+        <!-- Items Container -->
+        <div id="itemsContainer" class="space-y-4">
+            <!-- Items injected dynamically -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-center">
+            <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-400 mb-4 shadow-inner">
+                <i class="fa-solid fa-folder-open text-3xl"></i>
+            </div>
+            <h3 class="font-bold text-slate-700 text-lg mb-1">لا توجد نوافذ أو عناصر</h3>
+            <p class="text-slate-400 text-xs max-w-xs mb-6">قم بإنشاء نافذة جديدة وابدأ بإضافة عناصرك وتصنيفاتك بحرية تامة.</p>
+            <button onclick="openAddWindowModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md transition active:scale-95">
+                إضافة نافذة الآن
+            </button>
+        </div>
+    </main>
+
+    <!-- Floating Action Button for Adding Root Item -->
+    <div id="fabContainer" class="fixed bottom-6 left-0 right-0 max-w-md mx-auto px-4 pointer-events-none z-20 flex justify-end">
+        <button onclick="openAddItemModal()" class="pointer-events-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold w-14 h-14 rounded-2xl shadow-lg shadow-teal-500/30 flex items-center justify-center transition transform active:scale-90 border-2 border-white">
+            <i class="fa-solid fa-plus text-2xl"></i>
+        </button>
+    </div>
+
+    <!-- Universal Modal (Dialog) -->
+    <div id="appModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity opacity-0">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200" id="modalBox">
+            <div class="bg-slate-50 px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 id="modalTitle" class="font-bold text-slate-800 text-base">عنوان النافذة</h3>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-200/60 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-5 max-h-[75vh] overflow-y-auto" id="modalBody">
+                <!-- Dynamic form fields -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-xl shadow-xl backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4">
+        رسالة تنبيه
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Data Structure & Storage Management
+        let appData = {
+            settings: {
+                appName: "المفكرة الذكية الشاملة",
+                appSubtitle: "إدارة النوافذ والأقسام بكل سلاسة",
+                appIcon: "fa-solid fa-book-bookmark"
+            },
+            windows: []
+        };
+
+        let currentWindowId = null;
+
+        // Load data from LocalStorage on start
+        function loadData() {
+            const saved = localStorage.getItem('smart_dynamic_app_v4');
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                    if (!appData.settings) {
+                        appData.settings = {
+                            appName: "المفكرة الذكية الشاملة",
+                            appSubtitle: "إدارة النوافذ والأقسام بكل سلاسة",
+                            appIcon: "fa-solid fa-book-bookmark"
+                        };
+                    }
+                } catch (e) {
+                    console.error("Error loading data", e);
+                }
+            }
+
+            if (!appData.windows || appData.windows.length === 0) {
+                const defaultWinId = 'win_' + Date.now();
+                appData.windows = [
+                    {
+                        id: defaultWinId,
+                        name: 'الأقسام العامة',
+                        items: [
+                            {
+                                id: 'item_1',
+                                title: 'أركان الإسلام الأساسية',
+                                children: [
+                                    { id: 'sub_1', title: 'الشهادتان' },
+                                    { id: 'sub_2', title: 'إقام الصلاة' },
+                                    { id: 'sub_3', title: 'إيتاء الزكاة' }
+                                ]
+                            }
+                        ]
+                    }
+                ];
+                currentWindowId = defaultWinId;
+                saveData();
+            } else {
+                currentWindowId = appData.windows[0].id;
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('smart_dynamic_app_v4', JSON.stringify(appData));
+            render();
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-50 text-white text-xs px-4 py-2.5 rounded-xl shadow-xl backdrop-blur-md transition-all duration-300 opacity-100 transform translate-y-0 ${type === 'error' ? 'bg-rose-600/90' : 'bg-slate-900/90'}`;
+            setTimeout(() => {
+                toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-50 text-white text-xs px-4 py-2.5 rounded-xl shadow-xl backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none transform -translate-y-4`;
+            }, 2500);
+        }
+
+        // Render App UI
+        function render() {
+            renderBranding();
+            renderTabs();
+            renderCurrentWindow();
+        }
+
+        // Render Branding / Header Metadata
+        function renderBranding() {
+            const s = appData.settings;
+            document.getElementById('pageTitle').innerText = s.appName;
+            document.getElementById('headerTitle').innerText = s.appName;
+            document.getElementById('headerSubtitle').innerText = s.appSubtitle;
+            document.getElementById('headerIcon').className = `${s.appIcon} text-xl text-yellow-300`;
+        }
+
+        // Render Tabs
+        function renderTabs() {
+            const container = document.getElementById('windowsTabsContainer');
+            container.innerHTML = '';
+
+            if (appData.windows.length === 0) {
+                container.innerHTML = '<span class="text-xs text-indigo-200 py-1">لا توجد نوافذ متاحة</span>';
+                return;
+            }
+
+            appData.windows.forEach(win => {
+                const isActive = win.id === currentWindowId;
+                const tab = document.createElement('button');
+                tab.className = `whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 ${
+                    isActive 
+                    ? 'bg-white text-indigo-700 shadow-sm' 
+                    : 'bg-indigo-800/50 text-indigo-100 hover:bg-indigo-800'
+                }`;
+                tab.innerHTML = `<i class="fa-solid fa-window-maximize text-[10px]"></i><span>${escapeHtml(win.name)}</span>`;
+                tab.onclick = () => {
+                    currentWindowId = win.id;
+                    render();
+                };
+                container.appendChild(tab);
+            });
+        }
+
+        // Render Current Window & Items
+        function renderCurrentWindow() {
+            const currentWin = appData.windows.find(w => w.id === currentWindowId);
+            const headerEl = document.getElementById('currentWindowHeader');
+            const itemsEl = document.getElementById('itemsContainer');
+            const emptyEl = document.getElementById('emptyState');
+            const fabEl = document.getElementById('fabContainer');
+
+            if (!currentWin) {
+                headerEl.innerHTML = '';
+                itemsEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                emptyEl.classList.add('flex');
+                fabEl.style.display = 'none';
+                return;
+            }
+
+            emptyEl.classList.remove('flex');
+            emptyEl.classList.add('hidden');
+            fabEl.style.display = 'flex';
+
+            headerEl.innerHTML = `
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-folder-open text-sm"></i>
+                    </div>
+                    <div class="truncate">
+                        <h2 class="font-bold text-slate-800 text-sm truncate">${escapeHtml(currentWin.name)}</h2>
+                        <span class="text-[10px] text-slate-400">${currentWin.items.length} عناصر رئيسية</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                    <button onclick="openEditWindowModal('${currentWin.id}')" title="تعديل النافذة" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-600 flex items-center justify-center transition">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <button onclick="deleteWindowPrompt('${currentWin.id}')" title="حذف النافذة" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 flex items-center justify-center transition">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                </div>
+            `;
+
+            itemsEl.innerHTML = '';
+            if (currentWin.items.length === 0) {
+                itemsEl.innerHTML = `
+                    <div class="bg-white rounded-2xl p-8 text-center border border-dashed border-slate-200">
+                        <p class="text-xs text-slate-400 mb-3">هذه النافذة فارغة، اضغط على زر الإضافة أدناه لإضافة أول عنصر رئيسي.</p>
+                        <button onclick="openAddItemModal()" class="text-indigo-600 hover:text-indigo-700 text-xs font-bold bg-indigo-50 px-4 py-2 rounded-xl">
+                            + إضافة عنصر رئيسي
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            currentWin.items.forEach((item, index) => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'bg-white rounded-2xl p-4 shadow-sm border border-slate-100 transition';
+                
+                let childrenHtml = '';
+                if (item.children && item.children.length > 0) {
+                    item.children.forEach((child) => {
+                        childrenHtml += `
+                            <div class="flex items-center justify-between bg-slate-50 hover:bg-slate-100/80 px-3 py-2 rounded-xl text-xs transition border border-slate-100/60 group">
+                                <div class="flex items-center gap-2 overflow-hidden">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"></span>
+                                    <span class="text-slate-700 font-medium truncate">${escapeHtml(child.title)}</span>
+                                </div>
+                                <div class="flex items-center gap-1 opacity-80 group-hover:opacity-100 shrink-0">
+                                    <button onclick="openEditSubItemModal('${item.id}', '${child.id}')" class="w-6 h-6 rounded-md hover:bg-white text-slate-400 hover:text-indigo-600 flex items-center justify-center transition">
+                                        <i class="fa-solid fa-pen text-[10px]"></i>
+                                    </button>
+                                    <button onclick="deleteSubItem('${item.id}', '${child.id}')" class="w-6 h-6 rounded-md hover:bg-white text-slate-400 hover:text-rose-600 flex items-center justify-center transition">
+                                        <i class="fa-solid fa-trash text-[10px]"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    childrenHtml = `<p class="text-[11px] text-slate-400 italic px-2">لا توجد فروع فرعية مضافة بعد.</p>`;
+                }
+
+                itemCard.innerHTML = `
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+                        <div class="flex items-center gap-2 overflow-hidden">
+                            <span class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs font-bold shrink-0">${index + 1}</span>
+                            <h3 class="font-bold text-slate-800 text-sm truncate">${escapeHtml(item.title)}</h3>
+                        </div>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button onclick="openAddSubItemModal('${item.id}')" title="إضافة فرع" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-xs font-semibold flex items-center gap-1 transition">
+                                <i class="fa-solid fa-plus text-[10px]"></i> فرع
+                            </button>
+                            <button onclick="openEditItemModal('${item.id}')" title="تعديل العنصر" class="w-7 h-7 rounded-lg bg-slate-50 hover:bg-amber-50 text-slate-500 hover:text-amber-600 flex items-center justify-center transition">
+                                <i class="fa-solid fa-pen text-xs"></i>
+                            </button>
+                            <button onclick="deleteItem('${item.id}')" title="حذف العنصر" class="w-7 h-7 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-500 hover:text-rose-600 flex items-center justify-center transition">
+                                <i class="fa-solid fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        ${childrenHtml}
+                    </div>
+                `;
+                itemsEl.appendChild(itemCard);
+            });
+        }
+
+        // Modal Controls
+        function showModal(title, htmlContent) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerHTML = htmlContent;
+            const modal = document.getElementById('appModal');
+            const box = document.getElementById('modalBox');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                box.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('appModal');
+            const box = document.getElementById('modalBox');
+            modal.classList.add('opacity-0');
+            box.classList.remove('scale-100');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // --- Settings / Control Panel Modal ---
+        function openSettingsModal() {
+            const s = appData.settings;
+            showModal('لوحة التحكم (تخصيص الكليشة والشعار)', `
+                <form onsubmit="saveSettings(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">اسم التطبيق (العنوان الرئيسي)</label>
+                        <input type="text" id="settingAppName" required value="${escapeHtml(s.appName)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">الوصف التعريفي (تحت العنوان)</label>
+                        <input type="text" id="settingAppSubtitle" required value="${escapeHtml(s.appSubtitle)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">أيقونة الشعار (FontAwesome Icon Class)</label>
+                        <input type="text" id="settingAppIcon" required value="${escapeHtml(s.appIcon)}" placeholder="fa-solid fa-book-bookmark" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50 ltr text-left">
+                        <p class="text-[10px] text-slate-400 mt-1">مثال: fa-solid fa-graduation-cap أو fa-solid fa-folder-tree</p>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">إلغاء</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition">حفظ التغييرات</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        function saveSettings(e) {
+            e.preventDefault();
+            const appName = document.getElementById('settingAppName').value.trim();
+            const appSubtitle = document.getElementById('settingAppSubtitle').value.trim();
+            const appIcon = document.getElementById('settingAppIcon').value.trim();
+
+            if (!appName) return;
+
+            appData.settings = {
+                appName,
+                appSubtitle,
+                appIcon: appIcon || 'fa-solid fa-book-bookmark'
+            };
+
+            saveData();
+            closeModal();
+            showToast('تم تحديث إعدادات الكليشة بنجاح');
+        }
+
+        // --- Window Actions ---
+        function openAddWindowModal() {
+            showModal('إضافة نافذة جديدة', `
+                <form onsubmit="saveNewWindow(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">اسم النافذة أو القسم</label>
+                        <input type="text" id="windowNameInput" required placeholder="مثال: التصنيفات، الفروع..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50">
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">إلغاء</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition">حفظ النافذة</button>
+                    </div>
+                </form>
+            `);
+            setTimeout(() => {
+                const input = document.getElementById('windowNameInput');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function saveNewWindow(e) {
+            e.preventDefault();
+            const name = document.getElementById('windowNameInput').value.trim();
+            if (!name) return;
+
+            const newWin = {
+                id: 'win_' + Date.now(),
+                name: name,
+                items: []
+            };
+
+            appData.windows.push(newWin);
+            currentWindowId = newWin.id;
+            saveData();
+            closeModal();
+            showToast('تمت إضافة النافذة بنجاح');
+        }
+
+        function openEditWindowModal(winId) {
+            const win = appData.windows.find(w => w.id === winId);
+            if (!win) return;
+
+            showModal('تعديل اسم النافذة', `
+                <form onsubmit="updateWindow(event, '${winId}')" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">اسم النافذة الجديد</label>
+                        <input type="text" id="editWindowNameInput" required value="${escapeHtml(win.name)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50">
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">إلغاء</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition">تحديث</button>
+                    </div>
+                </form>
+            `);
+            setTimeout(() => {
+                const input = document.getElementById('editWindowNameInput');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
+        }
+
+        function updateWindow(e, winId) {
+            e.preventDefault();
+            const name = document.getElementById('editWindowNameInput').value.trim();
+            if (!name) return;
+
+            const win = appData.windows.find(w => w.id === winId);
+            if (win) {
+                win.name = name;
+                saveData();
+                closeModal();
+                showToast('تم تحديث النافذة بنجاح');
+            }
+        }
+
+        function deleteWindowPrompt(winId) {
+            if (appData.windows.length <= 1) {
+                showToast('لا يمكنك حذف النافذة الأخيرة!', 'error');
+                return;
+            }
+
+            const win = appData.windows.find(w => w.id === winId);
+            if (!win) return;
+
+            showModal('تأكيد حذف النافذة', `
+                <div class="space-y-4">
+                    <div class="bg-rose-50 border border-rose-100 p-3.5 rounded-2xl flex items-start gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-500 text-lg mt-0.5"></i>
+                        <p class="text-xs text-rose-800 leading-relaxed">
+                            هل أنت متأكد من رغبتك في حذف النافذة <strong class="font-bold">"${escapeHtml(win.name)}"</strong>؟ سيتم حذف جميع العناصر والفروع التي بداخلها نهائياً ولا يمكن التراجع عن ذلك.
+                        </p>
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">تراجع، إغلاق</button>
+                        <button type="button" onclick="deleteWindow('${winId}')" class="px-5 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-md transition">نعم، حذف نهائي</button>
+                    </div>
+                </div>
+            `);
+        }
+
+        function deleteWindow(winId) {
+            appData.windows = appData.windows.filter(w => w.id !== winId);
+            if (appData.windows.length > 0) {
+                currentWindowId = appData.windows[0].id;
+            } else {
+                currentWindowId = null;
+            }
+            saveData();
+            closeModal();
+            showToast('تم حذف النافذة بنجاح');
+        }
+
+        // --- Root Item Actions ---
+        function openAddItemModal() {
+            showModal('إضافة عنصر رئيسي جديد', `
+                <form onsubmit="saveNewItem(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">عنوان العنصر الرئيسي</label>
+                        <input type="text" id="itemNameInput" required placeholder="أدخل اسم العنصر..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50">
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">إلغاء</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition">حفظ العنصر</button>
+                    </div>
+                </form>
+            `);
+            setTimeout(() => {
+                const input = document.getElementById('itemNameInput');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function saveNewItem(e) {
+            e.preventDefault();
+            const title = document.getElementById('itemNameInput').value.trim();
+            if (!title) return;
+
+            const win = appData.windows.find(w => w.id === currentWindowId);
+            if (!win) return;
+
+            const newItem = {
+                id: 'item_' + Date.now(),
+                title: title,
+                children: []
+            };
+
+            win.items.push(newItem);
+            saveData();
+            closeModal();
+            showToast('تمت إضافة العنصر بنجاح');
+        }
+
+        function openEditItemModal(itemId) {
+            const win = appData.windows.find(w => w.id === currentWindowId);
+            if (!win) return;
+            const item = win.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            showModal('تعديل العنصر الرئيسي', `
+                <form onsubmit="updateItem(event, '${itemId}')" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">عنوان العنصر الجديد</label>
+                        <input type="text" id="editItemNameInput" required value="${escapeHtml(item.title)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50">
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">إلغاء</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition">تحديث</button>
+                    </div>
+                </form>
+            `);
+            setTimeout(() => {
+                const input = document.getElementById('editItemNameInput');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
+        }
+
+        function updateItem(e, itemId) {
+            e.preventDefault();
+            const title = document.getElementById('editItemNameInput').value.trim();
+            if (!title) return;
+
+            const win = appData.windows.find(w => w.id === currentWindowId);
+            if (!win) return;
+            const item = win.items.find(i => i.id === itemId);
+            if (item) {
+                item.title = title;
+                saveData();
+                closeModal();
+                showToast('تم تحديث العنصر بنجاح');
+            }
+        }
+
+        function deleteItem(itemId) {
+            const win = appData.windows.find(w => w.id === currentWindowId);
+            if (!win) return;
+
+            win.items = win.items.filter(i => i.id !== itemId);
+            saveData();
+            showToast('تم حذف العنصر بنجاح');
+        }
+
+        // --- Sub-Item Actions ---
+        function openAddSubItemModal(itemId) {
+            showModal('إضافة فرع جديد', `
+                <form onsubmit="saveNewSubItem(event, '${itemId}')" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">اسم الفرع أو التفصيل</label>
+                        <input type="text" id="subItemNameInput" required placeholder="أدخل اسم الفرع..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50">
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">إلغاء</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition">إضافة الفرع</button>
+                    </div>
+                </form>
+            `);
+            setTimeout(() => {
+                const input = document.getElementById('subItemNameInput');
+                if (input) input.focus();
+            }, 100);
+        }
+
+        function saveNewSubItem(e, itemId) {
+            e.preventDefault();
+            const title = document.getElementById('subItemNameInput').value.trim();
+            if (!title) return;
+
+            const win = appData.windows.find(w => w.id === currentWindowId);
+            if (!win) return;
+            const item = win.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            if (!item.children) item.children = [];
+
+            item.children.push({
+                id: 'sub_' + Date.now(),
+                title: title
+            });
+
+            saveData();
+            closeModal();
+            showToast('تمت إضافة الفرع بنجاح');
+        }
+
+        function openEditSubItemModal(itemId, subId) {
+            const win = appData.windows.find(w => w.id === currentWindowId);
+            if (!win) return;
+            const item = win.items.find(i => i.id === itemId);
+            if (!item) return;
+            const sub = item.children.find(s => s.id === subId);
+            if (!sub) return;
+
+            showModal('تعديل الفرع', `
+                <form onsubmit="updateSubItem(event, '${itemId}', '${subId}')" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1.5">اسم الفرع الجديد</label>
+                        <input type="text" id="editSubNameInput" required value="${escapeHtml(sub.title)}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-indigo-600 bg-slate-50">
+                    </div>
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition">إلغاء</button>
+                        <button type="submit" class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md transition">تحديث</button>
+                    </div>
+                </form>
+            `);
+            setTimeout(() => {
+                const input = document.getElementById('editSubNameInput');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
+        }
+
+        function updateSubItem(e, itemId, subId) {
+            e.preventDefault();
+            const title = document.getElementById('editSubNameInput').value.trim();
+            if (!title) return;
+
+            const win = appData.windows.find(w => w.id === currentWindowId);
+            if (!win) return;
+            const item = win.items.find(i => i.id === itemId);
+            if (!item) return;
+            const sub = item.children.find(s => s.id === subId);
+            if (sub) {
+                sub.title = title;
+                saveData();
+                closeModal();
+                showToast('تم تحديث الفرع بنجاح');
+            }
+        }
+
+        function deleteSubItem(itemId, subId) {
+            const win = appData.windows.find(w => w.id === currentWindowId);
+            if (!win) return;
+            const item = win.items.find(i => i.id === itemId);
+            if (!item) return;
+
+            item.children = item.children.filter(s => s.id !== subId);
+            saveData();
+            showToast('تم حذف الفرع بنجاح');
+        }
+
+        // Helper to escape HTML to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialize App on Load
+        window.onload = function() {
+            loadData();
+        };
+    </script>
+</body>
+</html>
